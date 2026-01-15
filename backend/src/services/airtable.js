@@ -9,8 +9,14 @@
 const getConfig = () => {
     const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY
     const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID
-    const AIRTABLE_TABLE_NAME = process.env.AIRTABLE_TABLE_NAME || 'Leads'
+    // Usa 'Table 1' como padrão, mas remove espaços extras que podem vir do Railway
+    const AIRTABLE_TABLE_NAME = (process.env.AIRTABLE_TABLE_NAME || 'Table 1').trim()
     const BASE_URL = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}`
+
+    // Log de debug em produção
+    console.log('[Airtable Config] Base ID:', AIRTABLE_BASE_ID)
+    console.log('[Airtable Config] Table Name:', AIRTABLE_TABLE_NAME)
+    console.log('[Airtable Config] URL Final:', BASE_URL)
 
     return { AIRTABLE_API_KEY, AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME, BASE_URL }
 }
