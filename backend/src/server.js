@@ -1,11 +1,25 @@
-// IMPORTANTE: dotenv DEVE ser configurado ANTES de qualquer import que use variáveis de ambiente
+// Carrega .env apenas em desenvolvimento local (Railway injeta direto no process.env)
 import dotenv from 'dotenv'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
+import { existsSync } from 'fs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
-dotenv.config({ path: join(__dirname, '..', '.env') })
+const envPath = join(__dirname, '..', '.env')
+
+// Só carrega .env se o arquivo existir (desenvolvimento local)
+if (existsSync(envPath)) {
+    dotenv.config({ path: envPath })
+    console.log('[Env] Carregado de arquivo .env local')
+} else {
+    console.log('[Env] Usando variáveis de ambiente do sistema (produção)')
+}
+
+// Debug: mostra se as variáveis do Airtable estão configuradas
+console.log('[Env] AIRTABLE_API_KEY:', process.env.AIRTABLE_API_KEY ? 'configurado ✅' : 'NÃO DEFINIDO ❌')
+console.log('[Env] AIRTABLE_BASE_ID:', process.env.AIRTABLE_BASE_ID ? 'configurado ✅' : 'NÃO DEFINIDO ❌')
+console.log('[Env] AIRTABLE_TABLE_NAME:', process.env.AIRTABLE_TABLE_NAME || 'não definido, usando Leads')
 
 import express from 'express'
 import cors from 'cors'
