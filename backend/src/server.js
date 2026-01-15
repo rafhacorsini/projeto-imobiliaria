@@ -14,9 +14,15 @@ import leadsRouter from './routes/leads.js'
 const app = express()
 const PORT = process.env.PORT || 3001
 
-// Middlewares - CORS para permitir frontend em diferentes portas
+// Middlewares - CORS para permitir frontend local e produção
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'],
+    origin: [
+        'http://localhost:5173',
+        'http://localhost:5174',
+        'http://localhost:5175',
+        'https://projeto-imobiliaria.vercel.app',
+        /\.vercel\.app$/  // Aceita qualquer subdomínio do Vercel
+    ],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
 }))

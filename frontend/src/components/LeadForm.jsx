@@ -26,8 +26,10 @@ function LeadForm() {
         setLoading(true)
 
         try {
-            // Tenta enviar para o backend
-            const response = await fetch('http://localhost:3001/api/leads', {
+            // API de produção no Railway
+            const API_URL = 'https://projeto-imobiliaria-production.up.railway.app'
+
+            const response = await fetch(`${API_URL}/api/leads`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
