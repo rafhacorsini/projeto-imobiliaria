@@ -1,0 +1,272 @@
+{
+  "name": "Projeto 1 - Imobiliária Conecta",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-imobiliaria",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-lead",
+      "name": "Webhook Lead",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 300],
+      "webhookId": "lead-imobiliaria"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"status\": \"success\", \"message\": \"Lead recebido com sucesso!\", \"lead_id\": \"{{ $json.nome }}-{{ $now.toMillis() }}\"}"
+      },
+      "id": "respond-webhook",
+      "name": "Responder Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [400, 200]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "nome",
+              "name": "nome",
+              "value": "={{ $json.body?.nome || $json.nome || 'Lead Teste' }}",
+              "type": "string"
+            },
+            {
+              "id": "telefone",
+              "name": "telefone",
+              "value": "={{ $json.body?.telefone || $json.telefone || '11999999999' }}",
+              "type": "string"
+            },
+            {
+              "id": "email",
+              "name": "email",
+              "value": "={{ $json.body?.email || $json.email || 'teste@email.com' }}",
+              "type": "string"
+            },
+            {
+              "id": "interesse",
+              "name": "interesse",
+              "value": "={{ $json.body?.interesse || $json.interesse || 'Não informado' }}",
+              "type": "string"
+            },
+            {
+              "id": "regiao",
+              "name": "regiao",
+              "value": "={{ $json.body?.regiao || $json.regiao || 'Não informada' }}",
+              "type": "string"
+            },
+            {
+              "id": "faixa_preco",
+              "name": "faixa_preco",
+              "value": "={{ $json.body?.faixa_preco || $json.faixa_preco || 'Não informada' }}",
+              "type": "string"
+            },
+            {
+              "id": "data_entrada",
+              "name": "data_entrada",
+              "value": "={{ $now.format('dd/MM/yyyy HH:mm') }}",
+              "type": "string"
+            },
+            {
+              "id": "origem",
+              "name": "origem",
+              "value": "={{ $json.body?.origem || $json.origem || 'Formulário Site' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-fields",
+      "name": "Formatar Dados do Lead",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [400, 400]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "application": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Nome": "={{ $json.nome }}",
+            "Telefone": "={{ $json.telefone }}",
+            "Email": "={{ $json.email }}",
+            "Interesse": "={{ $json.interesse }}",
+            "Região": "={{ $json.regiao }}",
+            "Faixa de Preço": "={{ $json.faixa_preco }}",
+            "Data de Entrada": "={{ $json.data_entrada }}",
+            "Origem": "={{ $json.origem }}",
+            "Status": "Novo"
+          }
+        },
+        "options": {}
+      },
+      "id": "airtable-create",
+      "name": "Salvar no Airtable",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [600, 400],
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "content": "## 📱 SIMULAR WHATSAPP - Mensagem Inicial\n\n**Para:** {{ $json.telefone }}\n**Nome:** {{ $json.nome }}\n\n---\n\n**MENSAGEM:**\n\nOlá {{ $json.nome }}! 👋\n\nRecebemos seu contato na Imobiliária Conecta!\n\nAntes de um corretor entrar em contato, me conta:\n\n1️⃣ Você está buscando **comprar** ou **alugar**?\n2️⃣ Qual **região** da cidade prefere?\n3️⃣ Qual sua **faixa de investimento**?\n\nResponde aqui que já te direciono pro corretor certo! 🏠",
+        "height": 400,
+        "width": 350,
+        "color": 2
+      },
+      "id": "sticky-whatsapp-1",
+      "name": "WhatsApp Simulado",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [800, 250]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Simula envio de WhatsApp\n// Em produção, substituir por chamada real à API (Evolution/Z-API/Oficial)\n\nconst lead = $input.first().json;\n\nconst mensagemInicial = `Olá ${lead.nome}! 👋\n\nRecebemos seu contato na Imobiliária Conecta!\n\nAntes de um corretor entrar em contato, me conta:\n\n1️⃣ Você está buscando *comprar* ou *alugar*?\n2️⃣ Qual *região* da cidade prefere?\n3️⃣ Qual sua *faixa de investimento*?\n\nResponde aqui que já te direciono pro corretor certo! 🏠`;\n\nconsole.log('='.repeat(50));\nconsole.log('📱 WHATSAPP SIMULADO');\nconsole.log('='.repeat(50));\nconsole.log(`Para: ${lead.telefone}`);\nconsole.log(`Nome: ${lead.nome}`);\nconsole.log('-'.repeat(50));\nconsole.log('MENSAGEM:');\nconsole.log(mensagemInicial);\nconsole.log('='.repeat(50));\n\nreturn {\n  json: {\n    ...lead,\n    whatsapp_status: 'SIMULADO - Mensagem enviada',\n    whatsapp_mensagem: mensagemInicial,\n    whatsapp_timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "code-whatsapp",
+      "name": "Simular WhatsApp",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [800, 500]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "seconds",
+              "secondsInterval": 30
+            }
+          ]
+        }
+      },
+      "id": "skip-corretor",
+      "name": "Aguardar 30s (Simula delay)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1000, 500],
+      "webhookId": "wait-corretor"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Simula notificação ao corretor\n// Lista de corretores para rodízio\n\nconst corretores = [\n  { nome: 'Carlos Silva', telefone: '11988881111', especialidade: 'Apartamentos' },\n  { nome: 'Marina Costa', telefone: '11988882222', especialidade: 'Casas' },\n  { nome: 'Roberto Mendes', telefone: '11988883333', especialidade: 'Comercial' }\n];\n\n// Rodízio simples baseado em timestamp\nconst index = Math.floor(Date.now() / 1000) % corretores.length;\nconst corretorEscolhido = corretores[index];\n\nconst lead = $input.first().json;\n\nconst notificacao = `🔔 NOVO LEAD!\n\n👤 Nome: ${lead.nome}\n📱 Tel: ${lead.telefone}\n📧 Email: ${lead.email}\n🏠 Interesse: ${lead.interesse}\n📍 Região: ${lead.regiao}\n💰 Faixa: ${lead.faixa_preco}\n⏰ Entrada: ${lead.data_entrada}\n\n✅ Lead atribuído a você por rodízio.`;\n\nconsole.log('='.repeat(50));\nconsole.log('📢 NOTIFICAÇÃO AO CORRETOR');\nconsole.log('='.repeat(50));\nconsole.log(`Corretor: ${corretorEscolhido.nome}`);\nconsole.log(`Telefone: ${corretorEscolhido.telefone}`);\nconsole.log('-'.repeat(50));\nconsole.log('MENSAGEM:');\nconsole.log(notificacao);\nconsole.log('='.repeat(50));\n\nreturn {\n  json: {\n    ...lead,\n    corretor_nome: corretorEscolhido.nome,\n    corretor_telefone: corretorEscolhido.telefone,\n    corretor_especialidade: corretorEscolhido.especialidade,\n    notificacao_enviada: true,\n    notificacao_timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "code-corretor",
+      "name": "Notificar Corretor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 500]
+    },
+    {
+      "parameters": {
+        "content": "## ✅ LEAD PROCESSADO\n\n**Resumo:**\n- Lead salvo no Airtable\n- WhatsApp enviado ao cliente\n- Corretor notificado\n\n**Próximos passos em produção:**\n1. Substituir Code nodes por APIs reais\n2. Adicionar webhook de resposta do WhatsApp\n3. Implementar qualificação com IA",
+        "height": 200,
+        "width": 300,
+        "color": 4
+      },
+      "id": "sticky-final",
+      "name": "Resumo Final",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1400, 400]
+    },
+    {
+      "parameters": {
+        "content": "# 🏠 Projeto 1: Imobiliária Conecta\n\n## Fluxo:\n1. **Webhook** recebe lead do formulário\n2. **Formatar** dados do lead\n3. **Airtable** salva lead no CRM\n4. **WhatsApp** (simulado) envia mensagem inicial\n5. **Corretor** recebe notificação\n\n## Para testar:\n1. Configure credencial do Airtable\n2. Copie a URL do Webhook\n3. Faça um POST com dados de teste",
+        "height": 320,
+        "width": 350,
+        "color": 6
+      },
+      "id": "sticky-instrucoes",
+      "name": "Instruções",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-100, 200]
+    }
+  ],
+  "connections": {
+    "Webhook Lead": {
+      "main": [
+        [
+          {
+            "node": "Responder Webhook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Formatar Dados do Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatar Dados do Lead": {
+      "main": [
+        [
+          {
+            "node": "Salvar no Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salvar no Airtable": {
+      "main": [
+        [
+          {
+            "node": "Simular WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simular WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Aguardar 30s (Simula delay)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aguardar 30s (Simula delay)": {
+      "main": [
+        [
+          {
+            "node": "Notificar Corretor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "projeto-treino"
+  }
+}
