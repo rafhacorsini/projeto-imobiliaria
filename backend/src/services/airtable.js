@@ -91,11 +91,23 @@ export const createLead = async (leadData) => {
             })
         })
 
-        const data = await response.json()
+        console.log('[Airtable] Resposta status:', response.status)
+
+        const responseText = await response.text()
+        console.log('[Airtable] Resposta raw:', responseText)
+
+        let data
+        try {
+            data = JSON.parse(responseText)
+        } catch (parseError) {
+            console.error('[Airtable] ❌ Erro ao parsear resposta:', parseError.message)
+            throw new Error('Resposta inválida do Airtable')
+        }
 
         if (!response.ok) {
             console.error('[Airtable] ❌ ERRO DA API:')
-            console.error(JSON.stringify(data, null, 2))
+            console.error('[Airtable] Status:', response.status)
+            console.error('[Airtable] Erro:', JSON.stringify(data, null, 2))
             throw new Error(data.error?.message || 'Erro ao salvar no Airtable')
         }
 
@@ -103,7 +115,8 @@ export const createLead = async (leadData) => {
         return data.records[0]
 
     } catch (error) {
-        console.error('[Airtable] ❌ Erro de conexão:', error.message)
+        console.error('[Airtable] ❌ Erro completo:', error)
+        console.error('[Airtable] ❌ Mensagem:', error.message)
         // Não joga erro - retorna localmente para não quebrar o fluxo
         console.log('[Airtable] Salvando localmente como fallback...')
         return { id: `local_${Date.now()}`, fields: leadData, _local: true }
